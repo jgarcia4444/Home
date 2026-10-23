@@ -1,0 +1,73 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id String @id @default(cuid())
+  firstName String
+  lastName String
+  email String @unique
+  password String
+  avatar Avatar?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  administeredHomes Home[]
+  memberships HomeMember[]
+}
+
+model Avatar {
+  id String @id @default(cuid())
+  url String
+  userId String @unique
+  user User @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Home {
+  id String @id @default(cuid())
+  name String
+  adminUserId String
+  adminUser User @relation(fields: [adminUserId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  members HomeMember[]
+  lists List[]
+}
+
+model HomeMember {
+  id String @id @default(cuid())
+  homeId String
+  home Home @relation(fields: [homeId], references: [id])
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model List {
+  id String @id @default(cuid())
+  name String
+  homeId String
+  bgColor String
+  home Home @relation(fields: [homeId], references: [id])
+  items ListItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ListItem {
+  id String @id @default(cuid())
+  listId String
+  list List @relation(fields: [listId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name String 
+  isDone Boolean @default(false)
+}
+
