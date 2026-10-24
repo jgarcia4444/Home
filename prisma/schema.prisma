@@ -7,67 +7,107 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// NextAuth Required Models + Your Custom Fields
 model User {
-  id String @id @default(cuid())
-  firstName String
-  lastName String
-  email String @unique
-  password String
-  avatar Avatar?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  administeredHomes Home[]
-  memberships HomeMember[]
+  id                String       @id @default(cuid())
+  firstName         String?      // Made optional for social logins (Google/GitHub)
+  lastName          String?      // Made optional for social logins
+  email             String       @unique
+  emailVerified     DateTime?    // Required by NextAuth
+  password          String?      // Made optional (in case they use Google/GitHub login)
+  image             String?      // NextAuth default avatar field
+  avatar            Avatar?      // Your custom avatar model relation
+  accounts          Account[]    // Required by NextAuth
+  sessions          Session[]    // Required by NextAuth
+  administeredHomes Home[]       
+  memberships       HomeMember[] 
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 }
 
+model Account {
+  id                 String    @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?   @db.Text
+  access_token       String?   @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?   @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Your Custom App Models Continued Below...
 model Avatar {
-  id String @id @default(cuid())
-  url String
-  userId String @unique
-  user User @relation(fields: [userId], references: [id])
+  id        String   @id @default(cuid())
+  url       String
+  userId    String   @unique     
+  user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Home {
-  id String @id @default(cuid())
-  name String
+  id          String       @id @default(cuid())
+  name        String
   adminUserId String
-  adminUser User @relation(fields: [adminUserId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  members HomeMember[]
-  lists List[]
+  adminUser   User         @relation(fields: [adminUserId], references: [id])
+  members     HomeMember[] 
+  lists       List[]       
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model HomeMember {
-  id String @id @default(cuid())
-  homeId String
-  home Home @relation(fields: [homeId], references: [id])
-  userId String
-  user User @relation(fields: [userId], references: [id])
+  id        String   @id @default(cuid())
+  homeId    String
+  home      Home     @relation(fields: [homeId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model List {
-  id String @id @default(cuid())
-  name String
-  homeId String
-  bgColor String
-  home Home @relation(fields: [homeId], references: [id])
-  items ListItem[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id        String     @id @default(cuid())
+  name      String
+  homeId    String
+  bgColor   String
+  home      Home       @relation(fields: [homeId], references: [id])
+  items     ListItem[] 
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 }
 
 model ListItem {
-  id String @id @default(cuid())
-  listId String
-  list List @relation(fields: [listId], references: [id])
+  id        String   @id @default(cuid())
+  listId    String
+  list      List     @relation(fields: [listId], references: [id])
+  name      String 
+  isDone    Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  name String 
-  isDone Boolean @default(false)
 }
-
