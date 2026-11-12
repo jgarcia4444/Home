@@ -1,9 +1,9 @@
-import prisma from '@/lib/prisma'
+// import prisma from '@/lib/prisma'
 import HomeLists from "./components/home/HomeLists";
 
 export default function Home() {
 
-  const isLoggedIn = (): Boolean => {
+  const isLoggedIn = (): boolean => {
 
     return false;
   }
